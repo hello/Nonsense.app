@@ -20,13 +20,14 @@ typedef void (^InputBlock)(NSFileHandle*);
 
 @implementation AppDelegate
 
+NSString* const serverPort = @"3000";
+
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
     if ([self.window respondsToSelector:@selector(setTitleVisibility:)])
         self.window.titleVisibility = NSWindowTitleHidden;
     [self launchWebServer];
-    // get IP address: `ipconfig getifaddr en0` (or en1, etc)
-    // display IP and port of web server, with optional logs
+    self.addressField.stringValue = [self hostNameAndPort];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
@@ -74,6 +75,25 @@ typedef void (^InputBlock)(NSFileHandle*);
         [[strongSelf.logView textStorage] appendAttributedString:content];
         [strongSelf.logView scrollRangeToVisible:NSMakeRange([strongSelf.logView.string length], 0)];
     };
+}
+
+- (NSString*)hostNameAndPort
+{
+    NSString* const localhostAddressIPv4 = @"127.0.0.1";
+    NSString* const IPv4Matcher = @"^\\d+\\.\\d+\\.\\d+\\.\\d+$";
+    NSError* error = nil;
+    NSRegularExpression* regex = [[NSRegularExpression alloc] initWithPattern:IPv4Matcher options:0 error:&error];
+    if (error)
+        return nil;
+    for (NSString* address in [[NSHost currentHost] addresses]) {
+        if ([address isEqualToString:localhostAddressIPv4])
+            continue;
+        NSRange range = [regex rangeOfFirstMatchInString:address options:0 range:NSMakeRange(0, address.length)];
+        if (range.location != NSNotFound) {
+            return [NSString stringWithFormat:@"%@:%@", address, serverPort];
+        }
+    }
+    return nil;
 }
 
 @end
