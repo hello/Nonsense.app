@@ -35,6 +35,12 @@ NSString* const serverPort = @"3000";
     [self stopWebServer];
 }
 
+/**
+ *  Launch the nonsense web server for hosting timeline data. The cached data is loaded from
+ *  the supporting file named "timelines.txt". Other files could be substituted as needed, and
+ *  a few are available in the git repo for the nonsense project:
+ *  https://github.com/hello/nonsense
+ */
 - (void)launchWebServer
 {
     NSString* serverPath = [[NSBundle mainBundle] pathForResource:@"nonsense" ofType:nil];
@@ -60,11 +66,22 @@ NSString* const serverPort = @"3000";
     }
 }
 
+/**
+ *  Shut down the web server
+ */
 - (void)stopWebServer
 {
     [self.serverTask interrupt];
 }
 
+/**
+ *  Creates a block which when executed will write to the log view of the main window
+ *  the contents of the input file handle in the specified color
+ *
+ *  @param textColor the color in which to draw the text
+ *
+ *  @return the block for handling text input from a file handle
+ */
 - (InputBlock)inputBlockWithTextColor:(NSColor* __nonnull)textColor
 {
     __weak typeof(self) weakSelf = self;
@@ -77,6 +94,11 @@ NSString* const serverPort = @"3000";
     };
 }
 
+/**
+ *  Computes the host name and port of the web server to display in the window bar
+ *
+ *  @return host name and port delimited by a colon
+ */
 - (NSString*)hostNameAndPort
 {
     NSString* const localhostAddressIPv4 = @"127.0.0.1";
