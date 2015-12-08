@@ -10,29 +10,35 @@
 
 typedef void (^InputBlock)(NSFileHandle*);
 
-@interface AppDelegate ()
+@interface AppDelegate () <NSNetServiceDelegate>
 
 @property (weak) IBOutlet NSWindow* window;
 @property (weak) IBOutlet NSTextField* addressField;
 @property (assign) IBOutlet NSTextView* logView;
 @property (strong) NSTask* serverTask;
+@property (strong) NSNetService* netService;
 @end
 
 @implementation AppDelegate
 
 NSString* const serverPort = @"3000";
+NSString* const serviceType = @"_http._tcp.";
+NSString* const serviceName = @"nonsense-server";
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
     if ([self.window respondsToSelector:@selector(setTitleVisibility:)])
         self.window.titleVisibility = NSWindowTitleHidden;
-    [self launchWebServer];
+    if ([self launchWebServer]) {
+        [self startNetService];
+    }
     self.addressField.stringValue = [self hostNameAndPort];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
 {
     [self stopWebServer];
+    [self stopNetService];
 }
 
 /**
@@ -41,7 +47,7 @@ NSString* const serverPort = @"3000";
  *  a few are available in the git repo for the nonsense project:
  *  https://github.com/hello/nonsense
  */
-- (void)launchWebServer
+- (BOOL)launchWebServer
 {
     NSString* serverPath = [[NSBundle mainBundle] pathForResource:@"nonsense" ofType:nil];
     NSString* dataPath = [[NSBundle mainBundle] pathForResource:@"timelines" ofType:@"txt"];
@@ -53,17 +59,20 @@ NSString* const serverPort = @"3000";
     task.standardError = [NSPipe pipe];
     [task.standardOutput fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor blackColor]];
     [task.standardError fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor redColor]];
-    [task setTerminationHandler:^(NSTask* task) {
+    task.terminationHandler = ^(NSTask* task) {
         [task.standardOutput fileHandleForReading].readabilityHandler = nil;
         [task.standardError fileHandleForReading].readabilityHandler = nil;
-    }];
+    };
     self.serverTask = task;
     @try {
         [task launch];
     }
     @catch (NSException* exception) {
         [self.logView setString:[NSString stringWithFormat:@"The server launch failed! 🚀🔥 %@", exception]];
+        return NO;
     }
+    
+    return YES;
 }
 
 /**
@@ -86,12 +95,27 @@ NSString* const serverPort = @"3000";
 {
     __weak typeof(self) weakSelf = self;
     return ^(NSFileHandle* file) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        NSString* rawContent = [[NSString alloc] initWithData:[file availableData] encoding:NSUTF8StringEncoding];
-        NSAttributedString* content = [[NSAttributedString alloc] initWithString:rawContent attributes:@{ NSForegroundColorAttributeName : textColor }];
-        [[strongSelf.logView textStorage] appendAttributedString:content];
-        [strongSelf.logView scrollRangeToVisible:NSMakeRange([strongSelf.logView.string length], 0)];
+        NSString* rawContent = [[NSString alloc] initWithData:[file availableData]
+                                                     encoding:NSUTF8StringEncoding];
+        [weakSelf appendOutput:rawContent withTextColor:textColor];
     };
+}
+
+/**
+ *  Appends a given string to the log output view using a given text color.
+ *
+ *  @param rawContent the content to append
+ *  @param textColor the color in which to draw the text
+ */
+- (void)appendOutput:(NSString* __nonnull)rawContent withTextColor:(NSColor* __nonnull)textColor
+{
+    NSFont* font = [NSFont userFixedPitchFontOfSize:12.0];
+    NSDictionary<NSString*, id>* attributes = @{ NSForegroundColorAttributeName : textColor,
+                                                 NSFontAttributeName : font };
+    NSAttributedString* content = [[NSAttributedString alloc] initWithString:rawContent
+                                                                  attributes:attributes];
+    [[self.logView textStorage] appendAttributedString:content];
+    [self.logView scrollRangeToVisible:NSMakeRange([self.logView.string length], 0)];
 }
 
 /**
@@ -116,6 +140,43 @@ NSString* const serverPort = @"3000";
         }
     }
     return nil;
+}
+
+#pragma mark - Net Discovery
+
+- (void)startNetService
+{
+    self.netService = [[NSNetService alloc] initWithDomain:@""
+                                                      type:serviceType
+                                                      name:serviceName
+                                                      port:serverPort.intValue];
+    self.netService.delegate = self;
+    [self.netService publish];
+}
+
+- (void)stopNetService
+{
+    [self.netService stop];
+    self.netService = nil;
+}
+
+#pragma mark -
+
+- (void)netServiceWillPublish:(NSNetService*)sender
+{
+    [self appendOutput:@"Preparing auto-discovery\n" withTextColor:[NSColor blueColor]];
+}
+
+- (void)netServiceDidPublish:(NSNetService*)sender
+{
+    NSString* output = [NSString stringWithFormat:@"Auto-discovery ready as '%@'\n", sender.name];
+    [self appendOutput:output withTextColor:[NSColor blueColor]];
+}
+
+- (void)netService:(NSNetService*)sender didNotPublish:(NSDictionary<NSString*, NSNumber*>*)errorDict
+{
+    NSLog(@"*** Auto-discovery failed to start: %@", errorDict);
+    [self appendOutput:@"Auto-discovery failed to start\n" withTextColor:[NSColor redColor]];
 }
 
 @end
