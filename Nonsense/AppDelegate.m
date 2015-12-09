@@ -95,9 +95,11 @@ NSString* const serviceName = @"nonsense-server";
 {
     __weak typeof(self) weakSelf = self;
     return ^(NSFileHandle* file) {
-        NSString* rawContent = [[NSString alloc] initWithData:[file availableData]
-                                                     encoding:NSUTF8StringEncoding];
-        [weakSelf appendOutput:rawContent withTextColor:textColor];
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            NSString* rawContent = [[NSString alloc] initWithData:[file availableData]
+                                                         encoding:NSUTF8StringEncoding];
+            [weakSelf appendOutput:rawContent withTextColor:textColor];
+        }];
     };
 }
 
