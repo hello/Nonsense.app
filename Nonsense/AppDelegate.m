@@ -15,8 +15,10 @@ typedef void (^InputBlock)(NSFileHandle*);
 @property (weak) IBOutlet NSWindow* window;
 @property (weak) IBOutlet NSTextField* addressField;
 @property (assign) IBOutlet NSTextView* logView;
+
 @property (strong) NSTask* serverTask;
 @property (strong) NSNetService* netService;
+
 @end
 
 @implementation AppDelegate
@@ -27,11 +29,14 @@ NSString* const serviceName = @"nonsense-server";
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
-    if ([self.window respondsToSelector:@selector(setTitleVisibility:)])
+    if ([self.window respondsToSelector:@selector(setTitleVisibility:)]) {
         self.window.titleVisibility = NSWindowTitleHidden;
+    }
+    
     if ([self launchWebServer]) {
         [self startNetService];
     }
+    
     self.addressField.stringValue = [self hostNameAndPort];
 }
 
@@ -53,8 +58,9 @@ NSString* const serviceName = @"nonsense-server";
     NSString* dataPath = [[NSBundle mainBundle] pathForResource:@"timelines" ofType:@"txt"];
     NSTask* task = [NSTask new];
     [task setLaunchPath:serverPath];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:dataPath])
+    if ([[NSFileManager defaultManager] fileExistsAtPath:dataPath]) {
         [task setArguments:@[ @"--timeline-cache", dataPath ]];
+    }
     task.standardOutput = [NSPipe pipe];
     task.standardError = [NSPipe pipe];
     [task.standardOutput fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor blackColor]];
@@ -91,13 +97,13 @@ NSString* const serviceName = @"nonsense-server";
  *
  *  @return the block for handling text input from a file handle
  */
-- (InputBlock)inputBlockWithTextColor:(NSColor* __nonnull)textColor
+- (InputBlock)inputBlockWithTextColor:(nonnull NSColor*)textColor
 {
     __weak typeof(self) weakSelf = self;
     return ^(NSFileHandle* file) {
+        NSString* rawContent = [[NSString alloc] initWithData:[file availableData]
+                                                     encoding:NSUTF8StringEncoding];
         [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-            NSString* rawContent = [[NSString alloc] initWithData:[file availableData]
-                                                         encoding:NSUTF8StringEncoding];
             [weakSelf appendOutput:rawContent withTextColor:textColor];
         }];
     };
@@ -109,7 +115,7 @@ NSString* const serviceName = @"nonsense-server";
  *  @param rawContent the content to append
  *  @param textColor the color in which to draw the text
  */
-- (void)appendOutput:(NSString* __nonnull)rawContent withTextColor:(NSColor* __nonnull)textColor
+- (void)appendOutput:(nonnull NSString*)rawContent withTextColor:(nonnull NSColor*)textColor
 {
     NSFont* font = [NSFont userFixedPitchFontOfSize:12.0];
     NSDictionary<NSString*, id>* attributes = @{ NSForegroundColorAttributeName : textColor,
@@ -125,27 +131,39 @@ NSString* const serviceName = @"nonsense-server";
  *
  *  @return host name and port delimited by a colon
  */
-- (NSString*)hostNameAndPort
+- (nullable NSString*)hostNameAndPort
 {
     NSString* const localhostAddressIPv4 = @"127.0.0.1";
     NSString* const IPv4Matcher = @"^\\d+\\.\\d+\\.\\d+\\.\\d+$";
+    
     NSError* error = nil;
-    NSRegularExpression* regex = [[NSRegularExpression alloc] initWithPattern:IPv4Matcher options:0 error:&error];
-    if (error)
+    NSRegularExpression* regex = [[NSRegularExpression alloc] initWithPattern:IPv4Matcher
+                                                                      options:kNilOptions
+                                                                        error:&error];
+    if (error) {
         return nil;
+    }
+    
     for (NSString* address in [[NSHost currentHost] addresses]) {
         if ([address isEqualToString:localhostAddressIPv4])
             continue;
-        NSRange range = [regex rangeOfFirstMatchInString:address options:0 range:NSMakeRange(0, address.length)];
+        
+        NSRange range = [regex rangeOfFirstMatchInString:address
+                                                 options:kNilOptions
+                                                   range:NSMakeRange(0, address.length)];
         if (range.location != NSNotFound) {
             return [NSString stringWithFormat:@"%@:%@", address, serverPort];
         }
     }
+    
     return nil;
 }
 
 #pragma mark - Net Discovery
 
+/**
+ *  Begins broadcasting the availability of the nonsense server over zero-conf/bonjour.
+ */
 - (void)startNetService
 {
     self.netService = [[NSNetService alloc] initWithDomain:@""
@@ -156,6 +174,9 @@ NSString* const serviceName = @"nonsense-server";
     [self.netService publish];
 }
 
+/**
+ *  Stops broadcasting the availability of the nonsense server over zero-conf/bonjour.
+ */
 - (void)stopNetService
 {
     [self.netService stop];
