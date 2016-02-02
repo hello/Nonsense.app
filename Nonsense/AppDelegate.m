@@ -27,14 +27,12 @@ NSString* const serverPort = @"3000";
 NSString* const serviceType = @"_http._tcp.";
 NSString* const serviceName = @"nonsense-server";
 
+#pragma mark - Application Lifecycle
+
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
     if ([self.window respondsToSelector:@selector(setTitleVisibility:)]) {
         self.window.titleVisibility = NSWindowTitleHidden;
-    }
-    
-    if ([self launchWebServer]) {
-        [self startNetService];
     }
     
     self.addressField.stringValue = [self hostNameAndPort];
@@ -46,21 +44,33 @@ NSString* const serviceName = @"nonsense-server";
     [self stopNetService];
 }
 
-/**
- *  Launch the nonsense web server for hosting timeline data. The cached data is loaded from
- *  the supporting file named "timelines.txt". Other files could be substituted as needed, and
- *  a few are available in the git repo for the nonsense project:
- *  https://github.com/hello/nonsense
- */
+#pragma mark - Server Task
+
+- (nonnull NSArray*)serverArguments {
+    NSMutableArray<NSString*>* arguments = [NSMutableArray array];
+    
+    NSString* serverJarPath = [[NSBundle mainBundle] pathForResource:@"nonsense" ofType:@"jar"];
+    [arguments addObject:@"-jar"];
+    [arguments addObject:serverJarPath];
+    
+    if (self.timelineCachePath.length > 0) {
+        [arguments addObject:@"--timeline-cache"];
+        [arguments addObject:self.timelineCachePath];
+    }
+    
+    if (self.trendsCachePath.length > 0) {
+        [arguments addObject:@"--trends-cache"];
+        [arguments addObject:self.trendsCachePath];
+    }
+    
+    return [arguments copy];
+}
+
 - (BOOL)launchWebServer
 {
-    NSString* serverPath = [[NSBundle mainBundle] pathForResource:@"nonsense" ofType:nil];
-    NSString* dataPath = [[NSBundle mainBundle] pathForResource:@"timelines" ofType:@"txt"];
     NSTask* task = [NSTask new];
-    [task setLaunchPath:serverPath];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:dataPath]) {
-        [task setArguments:@[ @"--timeline-cache", dataPath ]];
-    }
+    [task setLaunchPath:@"/usr/bin/java"];
+    task.arguments = [self serverArguments];
     task.standardOutput = [NSPipe pipe];
     task.standardError = [NSPipe pipe];
     [task.standardOutput fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor blackColor]];
@@ -78,6 +88,8 @@ NSString* const serviceName = @"nonsense-server";
         return NO;
     }
     
+    self.running = YES;
+    
     return YES;
 }
 
@@ -87,7 +99,13 @@ NSString* const serviceName = @"nonsense-server";
 - (void)stopWebServer
 {
     [self.serverTask interrupt];
+    self.serverTask = nil;
+    self.running = NO;
+    
+    [self appendOutput:@"Server stopped\n" withTextColor:[NSColor blueColor]];
 }
+
+#pragma mark - Output
 
 /**
  *  Creates a block which when executed will write to the log view of the main window
@@ -126,6 +144,8 @@ NSString* const serviceName = @"nonsense-server";
     [self.logView scrollRangeToVisible:NSMakeRange([self.logView.string length], 0)];
 }
 
+#pragma mark - Utilities
+
 /**
  *  Computes the host name and port of the web server to display in the window bar
  *
@@ -145,8 +165,9 @@ NSString* const serviceName = @"nonsense-server";
     }
     
     for (NSString* address in [[NSHost currentHost] addresses]) {
-        if ([address isEqualToString:localhostAddressIPv4])
+        if ([address isEqualToString:localhostAddressIPv4]) {
             continue;
+        }
         
         NSRange range = [regex rangeOfFirstMatchInString:address
                                                  options:kNilOptions
@@ -196,10 +217,68 @@ NSString* const serviceName = @"nonsense-server";
     [self appendOutput:output withTextColor:[NSColor blueColor]];
 }
 
+- (void)netServiceDidStop:(NSNetService *)sender {
+    [self appendOutput:@"Auto-discovery stopped" withTextColor:[NSColor blueColor]];
+}
+
 - (void)netService:(NSNetService*)sender didNotPublish:(NSDictionary<NSString*, NSNumber*>*)errorDict
 {
     NSLog(@"*** Auto-discovery failed to start: %@", errorDict);
     [self appendOutput:@"Auto-discovery failed to start\n" withTextColor:[NSColor redColor]];
+}
+
+#pragma mark - Actions
+
++ (NSSet *)keyPathsForValuesAffectingRunTitle
+{
+    return [NSSet setWithObjects:@"running", nil];
+}
+
+- (NSString *)runTitle
+{
+    if (self.running) {
+        return @"Stop Server";
+    } else {
+        return @"Start Server";
+    }
+}
+
+- (IBAction)toggleRunning:(id)sender
+{
+    if (self.running) {
+        [self stopWebServer];
+        [self stopNetService];
+    } else {
+        if ([self launchWebServer]) {
+            [self startNetService];
+        }
+    }
+}
+
+- (IBAction)chooseTimelineCache:(id)sender
+{
+    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+    openPanel.title = @"Choose Timeline Cache";
+    openPanel.prompt = @"Choose";
+    openPanel.allowsMultipleSelection = NO;
+    openPanel.allowedFileTypes = @[(id)kUTTypeText];
+    [openPanel beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
+        if (result == NSFileHandlingPanelOKButton) {
+            self.timelineCachePath = openPanel.URL.path;
+        }
+    }];
+}
+
+- (IBAction)chooseTrendsCache:(id)sender
+{
+    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+    openPanel.title = @"Choose Trends Cache";
+    openPanel.prompt = @"Choose";
+    openPanel.allowsMultipleSelection = NO;
+    openPanel.allowedFileTypes = @[(id)kUTTypeText];
+    if ([openPanel runModal] == NSFileHandlingPanelOKButton) {
+        self.trendsCachePath = openPanel.URL.path;
+    }
 }
 
 @end
