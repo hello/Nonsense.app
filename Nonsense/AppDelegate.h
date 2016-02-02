@@ -15,12 +15,12 @@
 /**
  *  The location of the timeline cache; nil indicates no trends cache should be used.
  */
-@property (nonatomic, copy) NSString *timelineCachePath;
+@property (nonatomic, copy) NSString* timelineCachePath;
 
 /**
  *  The location of the trends cache; nil indicates no trends cache should be used.
  */
-@property (nonatomic, copy) NSString *trendsCachePath;
+@property (nonatomic, copy) NSString* trendsCachePath;
 
 /**
  *  Indicates whether or not the server is currently running.
@@ -30,7 +30,7 @@
 /**
  *  The title for the start/stop button.
  */
-@property (nonatomic, readonly, copy) NSString *runTitle;
+@property (nonatomic, readonly, copy) NSString* runTitle;
 
 #pragma mark - Actions
 

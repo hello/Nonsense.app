@@ -52,6 +52,8 @@ NSString* const serviceName = @"nonsense-server";
         [self runOldJavaInstallationModal];
         [NSApp terminate:nil];
     }
+    
+    [self appendOutput:@"Ready\n" withTextColor:[NSColor blueColor]];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)aNotification
@@ -218,7 +220,8 @@ NSString* const serviceName = @"nonsense-server";
         [task launch];
     }
     @catch (NSException* exception) {
-        [self.logView setString:[NSString stringWithFormat:@"The server launch failed! 🚀🔥 %@", exception]];
+        NSString* message = [NSString stringWithFormat:@"The server launch failed! 🚀🔥 %@", exception];
+        [self appendOutput:message withTextColor:[NSColor redColor]];
         return NO;
     }
     
@@ -349,7 +352,7 @@ NSString* const serviceName = @"nonsense-server";
     [self appendOutput:output withTextColor:[NSColor blueColor]];
 }
 
-- (void)netServiceDidStop:(NSNetService *)sender {
+- (void)netServiceDidStop:(NSNetService*)sender {
     [self appendOutput:@"Auto-discovery stopped\n" withTextColor:[NSColor blueColor]];
 }
 
@@ -361,12 +364,12 @@ NSString* const serviceName = @"nonsense-server";
 
 #pragma mark - Bindings
 
-+ (NSSet *)keyPathsForValuesAffectingRunTitle
++ (NSSet*)keyPathsForValuesAffectingRunTitle
 {
     return [NSSet setWithObjects:@"running", nil];
 }
 
-- (NSString *)runTitle
+- (NSString*)runTitle
 {
     if (self.running) {
         return @"Stop Server";
