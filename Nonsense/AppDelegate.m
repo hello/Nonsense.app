@@ -25,13 +25,16 @@ typedef void (^InputBlock)(NSFileHandle*);
 
 @implementation AppDelegate
 
+NSString* const javaPath = @"/usr/bin/java";
+NSString* const javaMinVersion = @"1.8";
+
 NSString* const serverPort = @"3000";
 NSString* const serviceType = @"_http._tcp.";
 NSString* const serviceName = @"nonsense-server";
 
 #pragma mark - Application Lifecycle
 
-- (void)applicationDidFinishLaunching:(NSNotification*)aNotification
+- (void)awakeFromNib
 {
     if ([self.window respondsToSelector:@selector(setTitleVisibility:)]) {
         self.window.titleVisibility = NSWindowTitleHidden;
@@ -40,10 +43,126 @@ NSString* const serviceName = @"nonsense-server";
     self.addressField.stringValue = [self hostNameAndPort];
 }
 
+- (void)applicationWillFinishLaunching:(NSNotification *)notification
+{
+    if (![self isJavaInstalled]) {
+        [self runNoJavaInstallationModal];
+        [NSApp terminate:nil];
+    } else if (![self isJavaVersionNewEnough]) {
+        [self runOldJavaInstallationModal];
+        [NSApp terminate:nil];
+    }
+}
+
 - (void)applicationWillTerminate:(NSNotification*)aNotification
 {
     [self stopWebServer];
     [self stopNetService];
+}
+
+#pragma mark - Java Sanity Check
+
+/**
+ *  Checks for the existence of Java on the user's computer.
+ */
+- (BOOL)isJavaInstalled
+{
+    return [[NSFileManager defaultManager] fileExistsAtPath:javaPath];
+}
+
+/**
+ *  Invokes the `java` command on the user's computer with the `-version`
+ *  option, and attempts to pull the version name out of the output.
+ *  Returns nil if the version name cannot be found.
+ */
+- (nullable NSString*)installedJavaVersion
+{
+    NSTask* task = [NSTask new];
+    task.launchPath = javaPath;
+    task.arguments = @[@"-version"];
+    
+    // For some inexplicable reason, the java command prints out the version info
+    // to stderr instead of stdout. On the off chance this is a bug, and it gets
+    // fixed in the future, we send both stderr and stdout to the same pipe.
+    NSPipe* pipe = [NSPipe pipe];
+    task.standardOutput = pipe;
+    task.standardError = pipe;
+    
+    [task launch];
+    [task waitUntilExit];
+    
+    NSData* rawOutput = [[pipe fileHandleForReading] readDataToEndOfFile];
+    NSString* output = [[NSString alloc] initWithData:rawOutput encoding:NSUTF8StringEncoding];
+    
+    // The output should include a line in this format:
+    // java version "1.8.0_81"
+    NSRange startOfVersion = [output rangeOfString:@"java version \""];
+    if (startOfVersion.location == NSNotFound) {
+        NSLog(@"Cannot find start of version in output");
+        return nil;
+    }
+    
+    NSRange endOfVersion = [output rangeOfString:@"\""
+                                         options:kNilOptions
+                                           range:NSMakeRange(NSMaxRange(startOfVersion),
+                                                             output.length - NSMaxRange(startOfVersion))];
+    if (endOfVersion.location == NSNotFound) {
+        NSLog(@"Cannot find end of version in output");
+        return nil;
+    }
+    
+    return [output substringWithRange:NSMakeRange(NSMaxRange(startOfVersion),
+                                                  endOfVersion.location - NSMaxRange(startOfVersion))];
+}
+
+/**
+ *  Attempts to fetch the version of the installed copy of Java, and if successful,
+ *  checks that it meets the minimum version requirements of `nonsense.jar`.
+ *  Returns NO if the version cannot be resolved.
+ */
+- (BOOL)isJavaVersionNewEnough
+{
+    NSString* version = [self installedJavaVersion];
+    NSLog(@"Detected Java version %@", version);
+    
+    // We only care about the first portion of the version
+    if (version.length >= 3) {
+        NSString* majorVersion = [version substringToIndex:3];
+        return [majorVersion compare:javaMinVersion options:NSNumericSearch] > NSOrderedAscending;
+    } else {
+        NSLog(@"Unexpected Java version %@, cannot perform comparison", version);
+        return NO;
+    }
+}
+
+#pragma mark -
+
+/**
+ *  Displays a modal alert explaining to the user that a copy of Java is
+ *  required to run the Nonsense server contained in this application.
+ */
+- (void)runNoJavaInstallationModal
+{
+    NSAlert* alert = [NSAlert new];
+    alert.messageText = @"Java Not Installed";
+    alert.informativeText = (@"Nonsense requires a copy of Java to be installed on your computer. "
+                             @"Download it from Oracle's Java website to continue.");
+    [alert addButtonWithTitle:@"Quit"];
+    [alert runModal];
+}
+
+/**
+ *  Displays a modal alert explaining to the user that their copy of Java is
+ *  too old to be able to run the Nonsense server contained in this application.
+ */
+- (void)runOldJavaInstallationModal
+{
+    NSAlert* alert = [NSAlert new];
+    alert.messageText = @"Java Installation Too Old";
+    alert.informativeText = (@"Nonsense requires Java 8 to be able to run its server. "
+                             @"Download it from Oracle's Java website to continue.");
+    [alert addButtonWithTitle:@"Quit"];
+    [alert runModal];
 }
 
 #pragma mark - Server Task
@@ -78,7 +197,7 @@ NSString* const serviceName = @"nonsense-server";
 - (BOOL)launchWebServer
 {
     NSTask* task = [NSTask new];
-    [task setLaunchPath:@"/usr/bin/java"];
+    task.launchPath = javaPath;
     task.arguments = [self serverArguments];
     task.standardOutput = [NSPipe pipe];
     task.standardError = [NSPipe pipe];
