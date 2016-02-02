@@ -19,6 +19,8 @@ typedef void (^InputBlock)(NSFileHandle*);
 @property (strong) NSTask* serverTask;
 @property (strong) NSNetService* netService;
 
+@property (nonatomic, readwrite) BOOL running;
+
 @end
 
 @implementation AppDelegate
@@ -46,6 +48,10 @@ NSString* const serviceName = @"nonsense-server";
 
 #pragma mark - Server Task
 
+/**
+ *  Creates and returns the arguments to run the nonsense server,
+ *  including any data caches chosen by the user.
+ */
 - (nonnull NSArray*)serverArguments {
     NSMutableArray<NSString*>* arguments = [NSMutableArray array];
     
@@ -66,6 +72,9 @@ NSString* const serviceName = @"nonsense-server";
     return [arguments copy];
 }
 
+/**
+ *  Starts the nonsense web server with the options selected by the user.
+ */
 - (BOOL)launchWebServer
 {
     NSTask* task = [NSTask new];
@@ -75,9 +84,15 @@ NSString* const serviceName = @"nonsense-server";
     task.standardError = [NSPipe pipe];
     [task.standardOutput fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor blackColor]];
     [task.standardError fileHandleForReading].readabilityHandler = [self inputBlockWithTextColor:[NSColor redColor]];
+    
+    __weak __typeof(self) weakSelf = self;
     task.terminationHandler = ^(NSTask* task) {
         [task.standardOutput fileHandleForReading].readabilityHandler = nil;
         [task.standardError fileHandleForReading].readabilityHandler = nil;
+        
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            [weakSelf appendOutput:@"Server stopped\n" withTextColor:[NSColor blueColor]];
+        }];
     };
     self.serverTask = task;
     @try {
@@ -101,8 +116,6 @@ NSString* const serviceName = @"nonsense-server";
     [self.serverTask interrupt];
     self.serverTask = nil;
     self.running = NO;
-    
-    [self appendOutput:@"Server stopped\n" withTextColor:[NSColor blueColor]];
 }
 
 #pragma mark - Output
@@ -218,7 +231,7 @@ NSString* const serviceName = @"nonsense-server";
 }
 
 - (void)netServiceDidStop:(NSNetService *)sender {
-    [self appendOutput:@"Auto-discovery stopped" withTextColor:[NSColor blueColor]];
+    [self appendOutput:@"Auto-discovery stopped\n" withTextColor:[NSColor blueColor]];
 }
 
 - (void)netService:(NSNetService*)sender didNotPublish:(NSDictionary<NSString*, NSNumber*>*)errorDict
@@ -227,7 +240,7 @@ NSString* const serviceName = @"nonsense-server";
     [self appendOutput:@"Auto-discovery failed to start\n" withTextColor:[NSColor redColor]];
 }
 
-#pragma mark - Actions
+#pragma mark - Bindings
 
 + (NSSet *)keyPathsForValuesAffectingRunTitle
 {
@@ -242,6 +255,8 @@ NSString* const serviceName = @"nonsense-server";
         return @"Start Server";
     }
 }
+
+#pragma mark - Actions
 
 - (IBAction)toggleRunning:(id)sender
 {
