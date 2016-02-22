@@ -23,6 +23,11 @@
 @property (nonatomic, copy) NSString* trendsCachePath;
 
 /**
+ *  The age of the emulated account.
+ */
+@property (nonatomic) NSUInteger accountAge;
+
+/**
  *  Indicates whether or not the server is currently running.
  */
 @property (nonatomic, readonly) BOOL running;

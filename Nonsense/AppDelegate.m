@@ -34,6 +34,15 @@ NSString* const serviceName = @"nonsense-server";
 
 #pragma mark - Application Lifecycle
 
+- (instancetype)init
+{
+    if ((self = [super init])) {
+        self.accountAge = 90;
+    }
+    
+    return self;
+}
+
 - (void)awakeFromNib
 {
     if ([self.window respondsToSelector:@selector(setTitleVisibility:)]) {
@@ -188,6 +197,11 @@ NSString* const serviceName = @"nonsense-server";
     if (self.trendsCachePath.length > 0) {
         [arguments addObject:@"--trends-cache"];
         [arguments addObject:self.trendsCachePath];
+    }
+    
+    if (self.accountAge > 0) {
+        [arguments addObject:@"--account-age"];
+        [arguments addObject:[NSString stringWithFormat:@"%ld", (unsigned long) self.accountAge]];
     }
     
     return [arguments copy];

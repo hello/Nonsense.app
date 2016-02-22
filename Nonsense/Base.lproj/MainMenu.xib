@@ -443,6 +443,41 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <textField verticalHuggingPriority="750" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VjF-Pu-71m" userLabel="Trends Cache Path">
+                        <rect key="frame" x="106" y="427" width="50" height="19"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="50" id="TEX-0l-NpQ"/>
+                        </constraints>
+                        <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="90" drawsBackground="YES" usesSingleLineMode="YES" id="Qve-OV-aXz">
+                            <numberFormatter key="formatter" formatterBehavior="default10_4" localizesFormat="NO" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="mAw-6B-wTS">
+                                <real key="minimum" value="1"/>
+                            </numberFormatter>
+                            <font key="font" metaFont="smallSystem"/>
+                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Path to cached trends"/>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="accountAge" id="6hU-Gi-ILT">
+                                <dictionary key="options">
+                                    <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                </dictionary>
+                            </binding>
+                            <binding destination="Voe-Tx-rLC" name="enabled" keyPath="running" id="IrR-g6-PXD">
+                                <dictionary key="options">
+                                    <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                </dictionary>
+                            </binding>
+                        </connections>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2BA-II-cgn">
+                        <rect key="frame" x="18" y="430" width="82" height="13"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Account Age:" id="hA6-35-NlS">
+                            <font key="font" metaFont="label"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                     <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dDH-n1-wyX" userLabel="Choose trends cache path">
                         <rect key="frame" x="653" y="449" width="76" height="28"/>
                         <buttonCell key="cell" type="push" title="Choose..." bezelStyle="rounded" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="e31-eF-yHO">
@@ -460,25 +495,25 @@
                         </connections>
                     </button>
                     <box verticalHuggingPriority="750" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="aes-lR-tc4" userLabel="Content Divider">
-                        <rect key="frame" x="0.0" y="431" width="744" height="5"/>
+                        <rect key="frame" x="0.0" y="404" width="744" height="5"/>
                         <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                         <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         <font key="titleFont" metaFont="system"/>
                     </box>
-                    <scrollView misplaced="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qtn-6X-frD" userLabel="Log Scroll View">
-                        <rect key="frame" x="0.0" y="1" width="744" height="432"/>
+                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qtn-6X-frD" userLabel="Log Scroll View">
+                        <rect key="frame" x="0.0" y="0.0" width="744" height="406"/>
                         <clipView key="contentView" id="cML-tN-utL">
-                            <rect key="frame" x="0.0" y="0.0" width="744" height="432"/>
+                            <rect key="frame" x="0.0" y="0.0" width="744" height="406"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView editable="NO" importsGraphics="NO" verticallyResizable="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="rfa-y4-gFM">
-                                    <rect key="frame" x="0.0" y="0.0" width="744" height="659"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="744" height="633"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <size key="minSize" width="744" height="432"/>
+                                    <size key="minSize" width="744" height="406"/>
                                     <size key="maxSize" width="749" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                    <size key="minSize" width="744" height="432"/>
+                                    <size key="minSize" width="744" height="406"/>
                                     <size key="maxSize" width="749" height="10000000"/>
                                 </textView>
                             </subviews>
@@ -489,7 +524,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="baZ-5z-r6c">
-                            <rect key="frame" x="728" y="0.0" width="16" height="432"/>
+                            <rect key="frame" x="728" y="0.0" width="16" height="406"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -498,15 +533,20 @@
                     <constraint firstItem="ZFk-mr-PmW" firstAttribute="leading" secondItem="Lk2-6o-enb" secondAttribute="trailing" constant="8" symbolic="YES" id="005-Hd-ykv"/>
                     <constraint firstItem="Lk2-6o-enb" firstAttribute="centerY" secondItem="ZFk-mr-PmW" secondAttribute="centerY" id="3jI-F4-C9E"/>
                     <constraint firstItem="WqS-cc-8VL" firstAttribute="top" secondItem="ZFk-mr-PmW" secondAttribute="bottom" constant="8" symbolic="YES" id="4yi-Pq-dgI"/>
+                    <constraint firstItem="2BA-II-cgn" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="77u-3K-KFm"/>
                     <constraint firstItem="Lk2-6o-enb" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="7BY-JT-AJf"/>
                     <constraint firstAttribute="trailing" secondItem="aes-lR-tc4" secondAttribute="trailing" id="Csm-GZ-p0p"/>
                     <constraint firstItem="dDH-n1-wyX" firstAttribute="leading" secondItem="WqS-cc-8VL" secondAttribute="trailing" constant="8" symbolic="YES" id="Dj3-6z-eZi"/>
                     <constraint firstAttribute="trailing" secondItem="qtn-6X-frD" secondAttribute="trailing" id="HSX-Pj-hNe"/>
+                    <constraint firstItem="VjF-Pu-71m" firstAttribute="leading" secondItem="2BA-II-cgn" secondAttribute="trailing" constant="8" symbolic="YES" id="JUA-GI-hZe"/>
                     <constraint firstItem="qtn-6X-frD" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" id="Jpr-lr-J7A"/>
                     <constraint firstAttribute="trailing" secondItem="yD3-7d-JMV" secondAttribute="trailing" constant="20" symbolic="YES" id="JuP-yX-wY6"/>
+                    <constraint firstItem="VjF-Pu-71m" firstAttribute="top" secondItem="WqS-cc-8VL" secondAttribute="bottom" constant="8" symbolic="YES" id="MJF-my-R40"/>
                     <constraint firstItem="xG4-xj-ATa" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="MZi-Qn-2L2"/>
+                    <constraint firstItem="2BA-II-cgn" firstAttribute="centerY" secondItem="VjF-Pu-71m" secondAttribute="centerY" id="Mtm-E9-uI6"/>
                     <constraint firstItem="xG4-xj-ATa" firstAttribute="centerY" secondItem="WqS-cc-8VL" secondAttribute="centerY" id="SxQ-Dt-ULw"/>
                     <constraint firstItem="xG4-xj-ATa" firstAttribute="width" secondItem="Lk2-6o-enb" secondAttribute="width" id="T0v-gE-8ye"/>
+                    <constraint firstItem="aes-lR-tc4" firstAttribute="top" secondItem="VjF-Pu-71m" secondAttribute="bottom" constant="20" id="Zm7-WR-WML"/>
                     <constraint firstItem="yD3-7d-JMV" firstAttribute="leading" secondItem="ZFk-mr-PmW" secondAttribute="trailing" constant="8" symbolic="YES" id="aVv-IT-of1"/>
                     <constraint firstItem="ZFk-mr-PmW" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="20" symbolic="YES" id="cZd-mA-b9G"/>
                     <constraint firstItem="yD3-7d-JMV" firstAttribute="centerY" secondItem="ZFk-mr-PmW" secondAttribute="centerY" id="e3v-p5-p0B"/>
@@ -514,8 +554,8 @@
                     <constraint firstItem="WqS-cc-8VL" firstAttribute="leading" secondItem="xG4-xj-ATa" secondAttribute="trailing" constant="8" symbolic="YES" id="i5x-0Y-Ysz"/>
                     <constraint firstItem="aes-lR-tc4" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" id="lja-zc-m1T"/>
                     <constraint firstAttribute="bottom" secondItem="qtn-6X-frD" secondAttribute="bottom" id="nVf-Eg-gZX"/>
+                    <constraint firstItem="2BA-II-cgn" firstAttribute="width" secondItem="Lk2-6o-enb" secondAttribute="width" id="oLk-AV-aBb"/>
                     <constraint firstItem="qtn-6X-frD" firstAttribute="top" secondItem="aes-lR-tc4" secondAttribute="bottom" id="oVP-ai-gCs"/>
-                    <constraint firstItem="aes-lR-tc4" firstAttribute="top" secondItem="WqS-cc-8VL" secondAttribute="bottom" constant="20" id="qiq-Pk-HAg"/>
                     <constraint firstAttribute="trailing" secondItem="dDH-n1-wyX" secondAttribute="trailing" constant="20" symbolic="YES" id="sWm-ti-njT"/>
                 </constraints>
             </view>
@@ -542,7 +582,7 @@
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="9098EC77-9397-4510-9D46-B8B56C41F869" label="" paletteLabel="Start/Stop" id="FhY-QM-92F">
                         <nil key="toolTip"/>
-                        <size key="minSize" width="118" height="33"/>
+                        <size key="minSize" width="86" height="32"/>
                         <size key="maxSize" width="118" height="33"/>
                         <button key="view" verticalHuggingPriority="750" id="ODJ-GN-Vbe">
                             <rect key="frame" x="0.0" y="14" width="86" height="32"/>
@@ -571,7 +611,7 @@
             <connections>
                 <outlet property="initialFirstResponder" destination="rfa-y4-gFM" id="9EX-54-dwV"/>
             </connections>
-            <point key="canvasLocation" x="589" y="585.5"/>
+            <point key="canvasLocation" x="589" y="585"/>
         </window>
         <userDefaultsController representsSharedInstance="YES" id="jju-Kr-q7H"/>
     </objects>
